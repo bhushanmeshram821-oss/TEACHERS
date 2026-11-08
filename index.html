@@ -1,0 +1,1881 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>स्मार्ट शिक्षक प्रोफाईल व डॅशबोर्ड - पिंपळगाव केंद्र</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Excel Export साठी लायब्ररी -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            color: #333;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 950px;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Views System */
+        .view-section { display: none; padding: 40px; }
+        .active-view { display: block; animation: slideUpFade 0.6s ease-out; }
+
+        @keyframes slideUpFade { 
+            from { opacity: 0; transform: translateY(20px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+
+        /* Start Page Styles */
+        .start-page { text-align: center; padding: 80px 20px; }
+        .start-icon { font-size: 80px; color: #2a5298; margin-bottom: 25px; filter: drop-shadow(0 5px 10px rgba(42,82,152,0.3)); }
+        .start-page h1 { color: #1e3c72; margin-bottom: 15px; font-weight: 600; font-size: 28px; }
+        .start-page p { color: #666; margin-bottom: 45px; font-size: 16px; font-weight: 500; }
+        
+        .btn {
+            padding: 14px 32px; font-size: 16px; font-weight: 600; color: #fff;
+            border: none; border-radius: 12px; cursor: pointer; transition: all 0.3s ease; margin: 10px;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-primary { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); box-shadow: 0 4px 15px rgba(42,82,152,0.3); }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(42,82,152,0.4); }
+        .btn-admin { background: linear-gradient(135deg, #e67e22 0%, #d35400 100%); box-shadow: 0 4px 15px rgba(230,126,34,0.3); }
+        .btn-admin:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(230,126,34,0.4); }
+        .btn-success { background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); box-shadow: 0 4px 15px rgba(39,174,96,0.3); }
+        .btn-success:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(39,174,96,0.4); }
+        .btn-danger { background: #e74c3c; color: white; }
+        .btn-danger:hover { background: #c0392b; }
+        .btn-secondary { background: #7f8c8d; }
+        .btn-secondary:hover { background: #636e72; }
+        .btn-info { background: #0984e3; box-shadow: 0 4px 15px rgba(9,132,227,0.3); }
+        .btn-info:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(9,132,227,0.4); }
+        .btn-small { padding: 6px 12px; font-size: 13px; border-radius: 6px; margin: 2px; }
+
+        /* Form Styles */
+        .step-header { text-align: center; margin-bottom: 35px; }
+        .step-header p { background: #eef2f3; display: inline-block; padding: 6px 15px; border-radius: 20px; font-size: 14px; font-weight: 600; color: #2a5298; margin-top: 10px; }
+        
+        /* Form Picture Style */
+        .form-picture {
+            font-size: 60px;
+            color: #2a5298;
+            margin: 15px 0;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+            display: block;
+        }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 20px; }
+        @media (max-width: 768px) { .form-row { grid-template-columns: 1fr; gap: 15px; } }
+        
+        .full-width { grid-column: span 2; }
+        .form-group label { font-size: 13.5px; font-weight: 600; color: #555; margin-bottom: 8px; display: block; }
+        
+        .input-wrapper { position: relative; width: 100%; }
+        .input-wrapper i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #95a5a6; font-size: 16px; transition: 0.3s; }
+        .input-wrapper input, .input-wrapper select {
+            width: 100%; padding: 12px 15px 12px 42px; border: 2px solid #e2e8f0; border-radius: 10px;
+            font-size: 14px; font-family: inherit; background: #f8fafc; color: #2d3748; transition: all 0.3s ease;
+        }
+        
+        .input-wrapper input:focus, .input-wrapper select:focus { outline: none; border-color: #2a5298; background: #ffffff; box-shadow: 0 0 0 4px rgba(42,82,152,0.1); }
+        .input-wrapper input:focus + i, .input-wrapper select:focus + i { color: #2a5298; }
+        
+        #udiseInput { background-color: #e8f0fe; font-weight: 600; color: #1e3c72; border-color: #bbdefb; cursor: not-allowed; }
+
+        .step-banner { background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 12px 20px; border-radius: 10px; margin: 35px 0 20px 0; font-weight: 500; font-size: 18px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .step-actions { display: flex; justify-content: center; gap: 20px; margin-top: 40px; padding-top: 25px; border-top: 1px dashed #cbd5e1; flex-wrap: wrap; }
+
+        /* Login Modal Styles */
+        .login-box { max-width: 400px; margin: auto; text-align: center; background: #ffffff; padding: 40px 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        .login-box h2 { color: #1e3c72; margin-bottom: 10px; }
+
+        /* Dashboard Styles */
+        .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 15px; flex-wrap: wrap; gap: 10px;}
+        
+        .filter-section { background: #f8fafc; padding: 20px; border-radius: 12px; margin-bottom: 25px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; border: 1px solid #e2e8f0;}
+        @media (max-width: 900px) { .filter-section { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 768px) { .filter-section { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 480px) { .filter-section { grid-template-columns: 1fr; } }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 13.5px; border-radius: 10px; overflow: hidden; }
+        th, td { padding: 15px; border-bottom: 1px solid #e2e8f0; text-align: left; vertical-align: top; }
+        th { background-color: #1e3c72; color: white; font-weight: 500; }
+        tr:hover { background-color: #f1f5f9; }
+        
+        .teacher-name-link { color: #1e3c72; cursor: pointer; text-decoration: underline; font-weight: 600; }
+        .teacher-name-link:hover { color: #d35400; }
+
+        /* Multi-Select Dropdown Styles */
+        .multi-select-container { position: relative; width: 100%; }
+        .multi-select-btn { width: 100%; padding: 12px 15px 12px 42px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; font-family: inherit; background: #f8fafc; color: #2d3748; text-align: left; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .multi-select-options { display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #e2e8f0; border-radius: 8px; margin-top: 5px; max-height: 200px; overflow-y: auto; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 10px; }
+        .multi-select-options label { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-weight: normal; font-size: 13.5px; cursor: pointer; }
+        .multi-select-options input[type="checkbox"] { width: auto; margin: 0; }
+
+        /* Leave Tracker Badge */
+        .badge-pending { background: #f1c40f; color: #fff; padding: 3px 8px; border-radius: 12px; font-size: 11px; }
+        .badge-approved { background: #2ecc71; color: #fff; padding: 3px 8px; border-radius: 12px; font-size: 11px; }
+        .badge-danger { background: #e74c3c; color: #fff; padding: 3px 8px; border-radius: 12px; font-size: 11px; }
+        
+        /* Admin leave list scroll */
+        .admin-leave-list { max-height: 100px; overflow-y: auto; padding-right: 5px; }
+        .admin-leave-list::-webkit-scrollbar { width: 4px; }
+        .admin-leave-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        /* Teacher Detail View & Reports */
+        .detail-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; margin-bottom: 20px; line-height: 1.8; }
+        .detail-box p { margin-bottom: 5px; }
+        .detail-box b { color: #1e3c72; }
+        
+        /* Filtered Teachers List Box */
+        .filtered-teachers-box { background: #fff8e1; border: 1px solid #f39c12; border-radius: 10px; padding: 15px; margin-bottom: 25px; display: none; }
+        .filtered-teachers-box h4 { color: #d35400; margin-bottom: 10px; font-size: 15px; }
+        .filtered-teachers-list { display: flex; flex-wrap: wrap; gap: 8px; }
+        .filtered-teacher-chip { background: #ffffff; border: 1px solid #f39c12; padding: 5px 12px; border-radius: 20px; font-size: 12.5px; color: #333; font-weight: 500; cursor: pointer; transition: 0.2s;}
+        .filtered-teacher-chip:hover { background: #f39c12; color: #fff; }
+
+        /* Print Styles */
+        @media print {
+            body { background: none; padding: 0; }
+            .container { box-shadow: none; max-width: 100%; }
+            .btn, .filter-section, .dashboard-header button, .action-cell, .filtered-teachers-box { display: none !important; }
+            .view-section { padding: 0; }
+            table { border: 1px solid #ccc; }
+            th, td { border: 1px solid #ccc !important; }
+        }
+
+        /* -------------------- NEW STYLES FOR REPORTS ANIMATIONS & COLORS -------------------- */
+        .report-section-header {
+            cursor: pointer;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            color: white !important;
+            font-weight: 600;
+        }
+
+        .report-section-header:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .report-content-container {
+            display: none;
+            padding: 15px;
+            background: #ffffff;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+            /* Scale Down effect */
+            transform-origin: top;
+        }
+
+        /* Animation classes for opening content */
+        .anim-slide-down {
+            animation: slideDownFade 0.4s ease-out forwards;
+        }
+        .anim-flip-in {
+            animation: flipInX 0.5s ease-out forwards;
+        }
+        .anim-zoom-in {
+            animation: zoomInFade 0.4s ease-out forwards;
+        }
+        
+        @keyframes slideDownFade {
+            from { opacity: 0; transform: translateY(-15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes flipInX {
+            from { transform: perspective(400px) rotate3d(1, 0, 0, 90deg); animation-timing-function: ease-in; opacity: 0; }
+            40% { transform: perspective(400px) rotate3d(1, 0, 0, -20deg); animation-timing-function: ease-in; }
+            60% { transform: perspective(400px) rotate3d(1, 0, 0, 10deg); opacity: 1; }
+            80% { transform: perspective(400px) rotate3d(1, 0, 0, -5deg); }
+            to { transform: perspective(400px); opacity: 1; }
+        }
+
+        @keyframes zoomInFade {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .toggle-icon {
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 18px;
+        }
+
+        .report-section-header.active .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Specific header colors */
+        .header-color-1 { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .header-color-2 { background: linear-gradient(135deg, #e67e22, #d35400); }
+        .header-color-3 { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+        .header-color-4 { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+        .header-color-5 { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .header-color-6 { background: linear-gradient(135deg, #1abc9c, #16a085); }
+        .header-color-7 { background: linear-gradient(135deg, #f1c40f, #f39c12); color: #333 !important; }
+        .header-color-8 { background: linear-gradient(135deg, #34495e, #2c3e50); }
+
+        .report-table {
+            width: 100%;
+            margin-top: 10px;
+        }
+        .report-table th { background: #f8fafc; color: #475569; font-size: 13px; text-transform: uppercase; border-bottom: 2px solid #cbd5e1; }
+        .report-table td { padding: 12px; font-size: 14px; border-bottom: 1px solid #f1f5f9; }
+        .report-table tr:last-child td { border-bottom: none; }
+        .report-table .total-row { background-color: #f0f9ff; font-weight: 700; color: #0284c7; }
+        .report-table tr:hover:not(.total-row) { background-color: #f8fafc; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <!-- ================= START PAGE ================= -->
+        <div id="view-start" class="view-section active-view start-page">
+            <i class="fa-solid fa-graduation-cap start-icon"></i>
+            <h1>शिक्षक व कर्मचारी ई-प्रोफाईल प्रणाली</h1>
+            <p>समूह साधन केंद्र पिंपळगाव, पंचायत समिती लाखनी</p>
+            <br>
+            <button class="btn btn-primary" onclick="openTeacherForm()"><i class="fa-solid fa-user-pen"></i>  शिक्षक लॉगीन </button>
+            <button class="btn btn-info" onclick="openOtherStaffForm()"><i class="fa-solid fa-users-gear"></i> इतर संवर्ग / कर्मचारी लॉगीन </button>
+            <button class="btn btn-admin" onclick="switchView('view-login')"><i class="fa-solid fa-shield-halved"></i> केंद्रप्रमुख लॉगीन</button>
+        </div>
+
+        <!-- ================= ADMIN LOGIN PAGE ================= -->
+        <div id="view-login" class="view-section">
+            <div class="login-box">
+                <h2><i class="fa-solid fa-user-lock"></i> सुरक्षित लॉगीन (केंद्रप्रमुख)</h2>
+                <p style="color:#64748b; margin-bottom:25px; font-size:14px;">माहिती पाहण्यासाठी व एडिट करण्यासाठी पासवर्ड टाका</p>
+                <div class="form-group" style="text-align:left;">
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-key"></i>
+                        <input type="password" id="adminPassword" placeholder="पासवर्ड टाका">
+                    </div>
+                </div>
+                <div style="margin-top:25px; display: flex; gap: 10px; justify-content: center;">
+                    <button class="btn btn-secondary" onclick="switchView('view-start')">रद्द करा</button>
+                    <button class="btn btn-primary" onclick="checkAdminPassword()">लॉगीन करा</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= SINGLE PAGE FORM ================= -->
+        <div id="view-form" class="view-section">
+            <h2 id="formTitle" style="text-align: center; color: #1e3c72; margin-bottom: 5px;"><i class="fa-solid fa-file-lines"></i> शिक्षक माहिती फॉर्म</h2>
+            
+            <div class="step-header">
+                <!-- Dynamic Picture Added Here -->
+                <i id="formPicture" class="fa-solid fa-user-tie form-picture"></i>
+                <p><span id="headerName">तुमचे नाव येथे दिसेल</span></p>
+            </div>
+            
+            <input type="hidden" id="editRowIndex" value="-1">
+            <input type="hidden" id="formTypeIndicator" value="teacher">
+
+            <!-- Section 1 -->
+            <div class="step-banner" style="margin-top: 10px;"><i class="fa-solid fa-id-card-clip"></i> १. वैयक्तिक माहिती</div>
+            <div class="form-row">
+                <div class="form-group full-width">
+                    <label>पूर्ण नाव:</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-user"></i>
+                        <input type="text" id="nameInput" placeholder="उदा. श्री. रमेश पाटील" onkeyup="updateHeaderName()">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>लिंग:</label>
+                    <div class="input-wrapper"><i class="fa-solid fa-venus-mars"></i><select id="f_gender" onchange="updateFormPicture()"><option>पुरुष</option><option>स्त्री</option><option>इतर</option></select></div>
+                </div>
+                <div class="form-group">
+                    <label>जन्मतारीख (DOB):</label>
+                    <div class="input-wrapper"><i class="fa-solid fa-calendar-day"></i><input type="date" id="f_dob"></div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>मोबाईल क्रमांक:</label>
+                    <div class="input-wrapper"><i class="fa-solid fa-mobile-screen"></i><input type="tel" id="f_mobile" placeholder="१० अंकी क्रमांक"></div>
+                </div>
+                <div class="form-group">
+                    <label>आधार क्रमांक:</label>
+                    <div class="input-wrapper"><i class="fa-solid fa-fingerprint"></i><input type="text" id="f_aadhar" placeholder="[Aadhaar Redacted]"></div>
+                </div>
+            </div>
+
+            <!-- Section 2 -->
+            <div class="step-banner"><i class="fa-solid fa-briefcase"></i> २. नोकरी व पद विषयक माहिती</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>सध्याचे पद:</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-user-tie"></i>
+                        <select id="f_pad" onchange="checkCustomPad(); updateFormPicture();">
+                            <!-- Options populated dynamically by JS based on selection -->
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>संवर्ग (Management):</label>
+                    <div class="input-wrapper"><i class="fa-solid fa-sitemap"></i><select id="f_management"><option>जिल्हा परिषद संवर्ग</option><option>खाजगी अनुदानित</option><option>विनाअनुदानित</option></select></div>
+                </div>
+            </div>
+            
+            <div class="form-row" id="customPadRow" style="display: none;">
+                <div class="form-group full-width">
+                    <label>इतर पदाचे नाव (Custom Designation):</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-user-tag"></i>
+                        <input type="text" id="f_pad_custom" placeholder="उदा. क्लर्क, सुरक्षारक्षक...">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3 -->
+            <div class="step-banner"><i class="fa-solid fa-user-graduate"></i> ३. शैक्षणिक व व्यावसायिक अर्हता</div>
+            <div class="form-row">
+                <div class="form-group"><label>शैक्षणिक अर्हता:</label><div class="input-wrapper"><i class="fa-solid fa-book"></i><input type="text" id="f_edu" placeholder="उदा. B.A., B.Sc., M.A."></div></div>
+                <div class="form-group"><label>व्यावसायिक अर्हता:</label><div class="input-wrapper"><i class="fa-solid fa-certificate"></i><input type="text" id="f_prof" placeholder="उदा. D.Ed., B.Ed."></div></div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>TET / CTET पास आहात काय?:</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                        <select id="f_tet" onchange="toggleTetPapers()">
+                            <option value="नाही">नाही</option>
+                            <option value="होय">होय</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group" id="tetPapersDiv" style="display: none;">
+                    <label>कोणता पेपर?:</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-file-circle-check"></i>
+                        <select id="f_tet_paper">
+                            <option value="Paper 1">Paper 1</option>
+                            <option value="Paper 2">Paper 2</option>
+                            <option value="दोन्ही">दोन्ही</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>MSCIT पास आहात काय?:</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-computer"></i>
+                        <select id="f_mscit">
+                            <option value="होय">होय</option>
+                            <option value="नाही">नाही</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4 -->
+            <div class="step-banner"><i class="fa-solid fa-school"></i> ४. शालेय माहिती</div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>प्रथम रुजू दिनांक:</label>
+                    <div class="input-wrapper"><i class="fa-solid fa-calendar-check"></i><input type="date" id="f_first_join"></div>
+                </div>
+                <div class="form-group">
+                    <label>या जिल्ह्यात रुजू दिनांक:</label>
+                    <div class="input-wrapper"><i class="fa-solid fa-map-location-dot"></i><input type="date" id="f_dist_join"></div>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group full-width">
+                    <label>शाळेची निवड करा:</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-building-columns"></i>
+                        <select id="schoolSelect" onchange="updateUdise()">
+                            <option value="">-- शाळा निवडा --</option>
+                            <option value="27100503201">Z.P. PRIMARY SCHOOL PIMPALGAON</option>
+                            <option value="27100503202">Z.P. HIGH SCHOOL PIMPALGAON</option>
+                            <option value="27100503203">Z.P. SHIVAJI PRIMARY SCHOOL PIMPALGAON</option>
+                            <option value="27100503204">SNEHA KANYA VIDYALAYA PIMPALGAON</option>
+                            <option value="27100503205">SKKYWARD'S INTERNATIONAL SCHOOL PIMPALGAON</option>
+                            <option value="27100503301">Z.P. UPPER PRIMARY SCHOOL RENGEPAR(KOHALI)</option>
+                            <option value="27100503401">Z.P. PRIMARY SCHOOL SAMEWADA</option>
+                            <option value="27100503501">Z.P. PRIMARY SCHOOL KHAIRI</option>
+                            <option value="27100503601">Z.P. UPPER PRIMARY SCHOOL MIREGAON</option>
+                            <option value="27100503602">SHUKRACHRYA VIDYALAYA MIREGAON</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>युडायस क्रमांक (UDISE):</label>
+                    <div class="input-wrapper"><i class="fa-solid fa-hashtag"></i><input type="text" id="udiseInput" readonly></div>
+                </div>
+                <div class="form-group">
+                    <label>सध्याच्या शाळेत रुजू दिनांक:</label>
+                    <div class="input-wrapper"><i class="fa-solid fa-school-flag"></i><input type="date" id="f_school_join"></div>
+                </div>
+            </div>
+
+            <!-- SELF DECLARATION ADDED HERE -->
+            <div class="form-row" style="margin-top: 20px;">
+                <div class="form-group full-width" style="background: #eef2f3; padding: 15px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                    <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; margin-bottom: 0;">
+                        <input type="checkbox" id="selfDeclaration" style="width: 20px; height: 20px; margin-top: 2px;">
+                        <span style="font-size: 13.5px; font-weight: 500; color: #333; line-height: 1.5;">
+                            <b>स्वयंघोषणापत्र (Self Declaration):</b> मी याद्वारे प्रमाणित करतो/करते की, या फॉर्ममध्ये भरलेली सर्व माहिती माझी स्वतःची असून ती माझ्या माहितीनुसार सत्य आणि अचूक आहे. कोणतीही माहिती चुकीची आढळल्यास त्याची सर्वस्वी जबाबदारी माझी राहील.
+                        </span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="step-actions">
+                <button class="btn btn-secondary" onclick="switchView('view-start')"><i class="fa-solid fa-xmark"></i> रद्द करा</button>
+                <button class="btn btn-success" onclick="initiateSave()"><i class="fa-solid fa-cloud-arrow-up"></i> माहिती सेव्ह करा</button>
+            </div>
+        </div>
+
+        <!-- ================= TEACHER DETAIL VIEW ================= -->
+        <div id="view-teacher-detail" class="view-section">
+            <div class="dashboard-header">
+                <h2 style="color: #1e3c72;"><i class="fa-solid fa-user-check"></i> संपूर्ण माहिती</h2>
+                <button class="btn btn-secondary" onclick="switchView('view-dashboard')"><i class="fa-solid fa-arrow-left"></i> डॅशबोर्डवर परत जा</button>
+            </div>
+            
+            <div class="detail-box" id="detailBoxContent">
+                <!-- Data will be injected here via JavaScript -->
+            </div>
+        </div>
+
+        <!-- ================= REPORTS VIEW ================= -->
+        <div id="view-reports" class="view-section" style="max-width: 100%; padding: 40px 10px;">
+            <div class="dashboard-header">
+                <h2 style="color: #1e3c72;"><i class="fa-solid fa-chart-pie"></i> विविध गोषवारे (Reports)</h2>
+                <button class="btn btn-secondary" onclick="switchView('view-dashboard')"><i class="fa-solid fa-arrow-left"></i> डॅशबोर्डवर परत जा</button>
+            </div>
+            <p style="color:#e67e22; font-size:14px; margin-bottom:20px; font-weight:600;"><i class="fa-solid fa-hand-pointer"></i> टीप: माहिती पाहण्यासाठी खालील रंगाीत पट्ट्यांवर क्लिक करा.</p>
+            <div id="reportsContent" style="display: block;">
+                <!-- Tables generated via JS -->
+            </div>
+        </div>
+        
+        <!-- ================= ZP TEACHERS LIST VIEW ================= -->
+        <div id="view-zp-teachers" class="view-section" style="max-width: 100%; padding: 40px 10px;">
+            <div class="dashboard-header">
+                <h2 style="color: #27ae60;"><i class="fa-solid fa-users"></i> जिल्हा परिषद संवर्ग कर्मचारी यादी</h2>
+                <button class="btn btn-secondary" onclick="switchView('view-dashboard')"><i class="fa-solid fa-arrow-left"></i> डॅशबोर्डवर परत जा</button>
+            </div>
+            <div style="overflow-x:auto; border-radius: 10px; border: 1px solid #e2e8f0;">
+                <table id="zpTeachersTable">
+                    <thead>
+                        <tr>
+                            <th>नाव</th>
+                            <th>शाळा</th>
+                            <th>मोबाईल</th>
+                            <th>पद</th>
+                        </tr>
+                    </thead>
+                    <tbody id="zpTeachersData">
+                        <!-- ZP Teachers Data will be injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ================= ALL STAFF LIST VIEW ================= -->
+        <div id="view-all-staff" class="view-section" style="max-width: 100%; padding: 40px 10px;">
+            <div class="dashboard-header">
+                <h2 style="color: #8e44ad;"><i class="fa-solid fa-users-rectangle"></i> सर्व कर्मचारी यादी (फिल्टरनुसार)</h2>
+                <div>
+                    <button class="btn btn-secondary btn-small" onclick="window.print()"><i class="fa-solid fa-print"></i> Print</button>
+                    <button class="btn btn-secondary btn-small" onclick="switchView('view-dashboard')"><i class="fa-solid fa-arrow-left"></i> डॅशबोर्ड</button>
+                </div>
+            </div>
+            <p style="color:#666; font-size:14px; margin-bottom:15px;">खालील यादी तुम्ही डॅशबोर्डवर निवडलेल्या फिल्टर्सनुसार तयार झाली आहे.</p>
+            <div style="overflow-x:auto; border-radius: 10px; border: 1px solid #e2e8f0;">
+                <table id="allStaffTable">
+                    <thead>
+                        <tr>
+                            <th>अ.क्र.</th>
+                            <th>नाव</th>
+                            <th>पद</th>
+                            <th>शाळा</th>
+                            <th>मोबाईल</th>
+                            <th>संवर्ग</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allStaffData">
+                        <!-- All Staff Data will be injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- ================= ADVANCED: SPECIAL / CUSTOM LISTS VIEW ================= -->
+        <div id="view-special-lists" class="view-section" style="max-width: 100%; padding: 40px 10px;">
+            <div class="dashboard-header">
+                <h2 style="color: #d35400;"><i class="fa-solid fa-list-check"></i> विविध विशेष याद्या (Custom Lists)</h2>
+                <div>
+                    <button class="btn btn-secondary btn-small" onclick="window.print()"><i class="fa-solid fa-print"></i> Print</button>
+                    <button class="btn btn-secondary btn-small" onclick="switchView('view-dashboard')"><i class="fa-solid fa-arrow-left"></i> डॅशबोर्ड</button>
+                </div>
+            </div>
+            
+            <div class="filter-section" style="grid-template-columns: 1fr 1fr; margin-bottom:20px; align-items: end;">
+                <div class="form-group">
+                    <label>घटक / प्रकार निवडा:</label>
+                    <div class="input-wrapper">
+                        <select id="specialListCategory" onchange="populateSubCategories()" style="padding:8px;">
+                            <option value="">-- घटक निवडा --</option>
+                            <option value="school">शाळेनुसार यादी</option>
+                            <option value="management">संवर्गानुसार यादी</option>
+                            <option value="gender">लिंगानुसार यादी</option>
+                            <option value="edu">शैक्षणिक अर्हतेनुसार यादी</option>
+                            <option value="prof">व्यावसायिक अर्हतेनुसार यादी</option>
+                            <option value="tet_mscit">TET / MSCIT नुसार यादी</option>
+                            <option value="leaves">रजेच्या स्थितीनुसार यादी</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group" id="subCategoryGroup" style="display:none;">
+                    <label>उप-प्रकार निवडा:</label>
+                    <div class="input-wrapper">
+                        <select id="specialListSubCategory" onchange="generateAdvancedSpecialList()" style="padding:8px;">
+                            <!-- Populated dynamically based on category -->
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="overflow-x:auto; border-radius: 10px; border: 1px solid #e2e8f0;">
+                <table id="specialListTable">
+                    <thead>
+                        <tr>
+                            <th>अ.क्र.</th>
+                            <th>नाव</th>
+                            <th>पद</th>
+                            <th>शाळा</th>
+                            <th>मोबाईल</th>
+                            <th>विशेष तपशील</th>
+                        </tr>
+                    </thead>
+                    <tbody id="specialListData">
+                        <tr><td colspan="6" style="text-align:center; color:#95a5a6;">कृपया वरील मेनूमधून यादीचा प्रकार व उप-प्रकार निवडा.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ================= ADMIN LEAVE MANAGEMENT ================= -->
+        <div id="view-admin-leave" class="view-section">
+            <div class="dashboard-header">
+                <h2 style="color: #1e3c72;"><i class="fa-solid fa-calendar-check"></i> रजा व्यवस्थापन</h2>
+                <button class="btn btn-secondary" onclick="switchView('view-dashboard'); renderTable();"><i class="fa-solid fa-arrow-left"></i> डॅशबोर्डवर परत जा</button>
+            </div>
+            
+            <div style="background:#f8fafc; padding:20px; border-radius:12px; margin-bottom:25px; border: 1px solid #e2e8f0;">
+                <h3 id="tDashName" style="margin-bottom:10px; color:#2c3e50;">नाव</h3>
+                <p><strong>शाळा:</strong> <span id="tDashSchool"></span></p>
+                <p><strong>स्थिती:</strong> <span id="tDashLockStatus"></span></p>
+                <p><strong>एकूण किरकोळ रजा (CL):</strong> <span id="tDashCLCount" style="font-weight: bold; font-size:16px;"></span></p>
+            </div>
+
+            <div class="step-banner" style="margin-top: 0;"><i class="fa-regular fa-calendar-plus"></i> रजा जोडा (केंद्रप्रमुख)</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>रजेचा प्रकार:</label>
+                    <div class="input-wrapper">
+                        <select id="leaveType">
+                            <option>किरकोळ रजा (CL)</option>
+                            <option>वैद्यकीय रजा (ML)</option>
+                            <option>अर्जित रजा (EL)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>तारीख (पासून - पर्यंत):</label>
+                    <div class="input-wrapper" style="display:flex; gap:10px; align-items:center;">
+                        <input type="date" id="leaveStartDate" title="सुरुवात">
+                        <span style="font-weight:600; color:#555;">ते</span>
+                        <input type="date" id="leaveEndDate" title="शेवट">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- NEW: LEAVE ATTACHMENT UPLOAD -->
+            <div class="form-row">
+                <div class="form-group full-width">
+                    <label>रजेचा अर्ज अपलोड करा (Optional / ऐच्छिक):</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-file-arrow-up"></i>
+                        <input type="file" id="leaveAttachment" accept="image/*,.pdf">
+                    </div>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary" onclick="applyLeave()">रजा ॲड करा</button>
+
+            <h3 style="margin-top: 30px; margin-bottom:15px; color:#1e3c72;">रजा रेकॉर्ड</h3>
+            <table id="teacherLeavesTable">
+                <thead><tr><th>रजा प्रकार (व अर्ज)</th><th>तारीख</th><th>स्टेटस</th></tr></thead>
+                <tbody><!-- Leaves loaded here --></tbody>
+            </table>
+        </div>
+
+        <!-- ================= ADMIN DASHBOARD ================= -->
+        <div id="view-dashboard" class="view-section" style="max-width: 100%; padding: 40px 10px;">
+            <div class="dashboard-header">
+                <h2 style="color: #1e3c72;"><i class="fa-solid fa-users-gear"></i> केंद्रस्तरीय डॅशबोर्ड</h2>
+                <div>
+                    <!-- Export Buttons & Reports -->
+                    <button class="btn btn-info btn-small" style="background:#f39c12; color:white; border:none;" onclick="switchView('view-special-lists')"><i class="fa-solid fa-list-check"></i> विशेष याद्या</button>
+                    <button class="btn btn-info btn-small" style="background:#8e44ad;" onclick="showAllStaffList()"><i class="fa-solid fa-list-ol"></i> सर्व कर्मचारी यादी</button>
+                    <button class="btn btn-success btn-small" style="background:#27ae60;" onclick="showZpTeachers()"><i class="fa-solid fa-building-user"></i> जि. प. यादी</button>
+                    <button class="btn btn-primary btn-small" onclick="showReports()"><i class="fa-solid fa-chart-pie"></i> गोषवारे</button>
+                    <button class="btn btn-success btn-small" onclick="exportExcel()"><i class="fa-solid fa-file-excel"></i> Excel</button>
+                    <button class="btn btn-info btn-small" onclick="exportWord()"><i class="fa-solid fa-file-word"></i> Word</button>
+                    <button class="btn btn-secondary btn-small" onclick="window.print()"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                    <button class="btn btn-secondary btn-small" onclick="logoutAdmin()"><i class="fa-solid fa-right-from-bracket"></i> लॉग आउट</button>
+                </div>
+            </div>
+            
+            <div id="dashboardSummary" style="display:flex; gap:15px; margin-bottom:25px; flex-wrap:wrap;"></div>
+
+            <!-- NEW ADVANCED MULTI-FILTERS -->
+            <div class="filter-section">
+                <!-- 1. संवर्ग निवड -->
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>संवर्ग (Management):</label>
+                    <select id="filterManagement" class="input-wrapper" style="padding:8px;" onchange="updateSchoolTypeFilter(); renderTable();">
+                        <option value="All">सर्व संवर्ग</option>
+                        <option value="जिल्हा परिषद संवर्ग">जि. प. संवर्ग</option>
+                        <option value="खाजगी अनुदानित">खाजगी अनुदानित</option>
+                        <option value="विनाअनुदानित">विनाअनुदानित</option>
+                    </select>
+                </div>
+                <!-- 2. शाळा प्रकार -->
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>शाळेचा प्रकार:</label>
+                    <select id="filterSchoolType" class="input-wrapper" style="padding:8px;" onchange="updateSchoolFilter(); renderTable();">
+                        <option value="All">सर्व प्रकार</option>
+                    </select>
+                </div>
+                <!-- 3. प्रत्यक्ष शाळांची यादी -->
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>शाळा निवडा:</label>
+                    <select id="filterSchool" class="input-wrapper" style="padding:8px;" onchange="renderTable()">
+                        <option value="All">सर्व शाळा</option>
+                    </select>
+                </div>
+                <!-- 4. पद निवड (MULTI-SELECT) -->
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>पदे निवडा:</label>
+                    <div class="input-wrapper multi-select-container">
+                        <i class="fa-solid fa-user-tie" style="z-index: 2;"></i>
+                        <button class="multi-select-btn" id="padDropdownBtn" onclick="togglePadDropdown()">सर्व पदे निवडली</button>
+                        <div class="multi-select-options" id="padDropdownOptions">
+                            <label><input type="checkbox" class="pad-cb" value="All" checked onchange="handlePadSelectAll(this)"> सर्व पदे</label>
+                            <hr style="margin:5px 0; border:0; border-top:1px solid #eee;">
+                            <!-- शिक्षक संवर्ग -->
+                            <label><input type="checkbox" class="pad-cb item" value="शिक्षण सेवक" checked onchange="updatePadSelection()"> शिक्षण सेवक</label>
+                            <label><input type="checkbox" class="pad-cb item" value="सहाय्यक शिक्षक" checked onchange="updatePadSelection()"> सहाय्यक शिक्षक</label>
+                            <label><input type="checkbox" class="pad-cb item" value="उपशिक्षक" checked onchange="updatePadSelection()"> उपशिक्षक</label>
+                            <label><input type="checkbox" class="pad-cb item" value="पदवीधर शिक्षक" checked onchange="updatePadSelection()"> पदवीधर शिक्षक</label>
+                            <label><input type="checkbox" class="pad-cb item" value="विषय शिक्षक" checked onchange="updatePadSelection()"> विषय शिक्षक</label>
+                            <label><input type="checkbox" class="pad-cb item" value="मुख्याध्यापक" checked onchange="updatePadSelection()"> मुख्याध्यापक</label>
+                            <label><input type="checkbox" class="pad-cb item" value="विशेष शिक्षक" checked onchange="updatePadSelection()"> विशेष शिक्षक</label>
+                            <label><input type="checkbox" class="pad-cb item" value="केंद्रप्रमुख" checked onchange="updatePadSelection()"> केंद्रप्रमुख</label>
+                            <hr style="margin:5px 0; border:0; border-top:1px solid #eee;">
+                            <!-- इतर संवर्ग -->
+                            <label><input type="checkbox" class="pad-cb item" value="पर्यवेक्षक" checked onchange="updatePadSelection()"> पर्यवेक्षक</label>
+                            <label><input type="checkbox" class="pad-cb item" value="ग्रंथपाल" checked onchange="updatePadSelection()"> ग्रंथपाल</label>
+                            <label><input type="checkbox" class="pad-cb item" value="प्रयोग शाळा सहाय्यक" checked onchange="updatePadSelection()"> प्रयोग शाळा सहाय्यक</label>
+                            <label><input type="checkbox" class="pad-cb item" value="वरिष्ठ सहाय्यक" checked onchange="updatePadSelection()"> वरिष्ठ सहाय्यक</label>
+                            <label><input type="checkbox" class="pad-cb item" value="कनिष्ठ सहाय्यक" checked onchange="updatePadSelection()"> कनिष्ठ सहाय्यक</label>
+                            <label><input type="checkbox" class="pad-cb item" value="परिचर" checked onchange="updatePadSelection()"> परिचर</label>
+                            <label><input type="checkbox" class="pad-cb item" value="घड्याळी तासिका शिक्षक" checked onchange="updatePadSelection()"> घड्याळी तासिका शिक्षक</label>
+                            <label><input type="checkbox" class="pad-cb item" value="व्यायाम शिक्षक" checked onchange="updatePadSelection()"> व्यायाम शिक्षक</label>
+                            <label><input type="checkbox" class="pad-cb item" value="कला शिक्षक" checked onchange="updatePadSelection()"> कला शिक्षक</label>
+                            <!-- Custom Option Fallback -->
+                            <label><input type="checkbox" class="pad-cb item" value="OTHER_CUSTOM" checked onchange="updatePadSelection()"> इतर पदे (Custom)</label>
+                        </div>
+                    </div>
+                </div>
+                <!-- 5. लिंग निवड -->
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>लिंग:</label>
+                    <select id="filterGender" class="input-wrapper" style="padding:8px;" onchange="renderTable()">
+                        <option value="All">सर्व</option>
+                        <option value="पुरुष">पुरुष</option>
+                        <option value="स्त्री">स्त्री</option>
+                        <option value="इतर">इतर</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- NEW FILTERED TEACHERS DISPLAY BOX -->
+            <div id="filteredTeachersBox" class="filtered-teachers-box">
+                <h4><i class="fa-solid fa-list-check"></i> फिल्टर केलेली यादी (<span id="filteredTeachersCount">0</span>)</h4>
+                <div id="filteredTeachersList" class="filtered-teachers-list">
+                    <!-- Chips will go here -->
+                </div>
+            </div>
+
+            <div style="overflow-x:auto; border-radius: 10px; border: 1px solid #e2e8f0;" id="tableContainer">
+                <table id="mainDataTable">
+                    <thead>
+                        <tr>
+                            <th>नाव व मोबाईल</th>
+                            <th>शाळा व पद</th>
+                            <th style="min-width: 220px;" class="action-cell">रजा माहिती (K.P. View)</th>
+                            <th class="action-cell">कृती (Action)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dashboardData"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ================= EMAIL VERIFICATION MODAL ADDED HERE ================= -->
+    <div id="emailModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+        <div class="login-box" style="position:relative; width: 90%; max-width: 380px;">
+            <h2 style="color: #27ae60;"><i class="fa-solid fa-envelope-circle-check"></i> ईमेल पडताळणी</h2>
+            <p style="color:#64748b; font-size:14px; margin-bottom:15px;">माहिती प्रमाणित करण्यासाठी तुमचा अधिकृत ईमेल आयडी टाका.</p>
+            <div class="input-wrapper">
+                <i class="fa-solid fa-envelope"></i>
+                <input type="email" id="emailVerifyInput" placeholder="तुमचा ईमेल आयडी">
+            </div>
+            <div style="margin-top:20px; display: flex; gap: 10px; justify-content: center;">
+                <button class="btn btn-secondary btn-small" onclick="closeEmailModal()">रद्द करा</button>
+                <button class="btn btn-success btn-small" onclick="verifyEmailAndSaveData()">प्रमाणित करा</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const GOOGLE_SCRIPT_URL = ""; 
+        const ADMIN_PASSWORD = "9999";
+        let currentTeacherIndex = -1; 
+        
+        // Arrays for Designation categorization
+        const TEACHER_ROLES = ["शिक्षण सेवक", "सहाय्यक शिक्षक", "उपशिक्षक", "पदवीधर शिक्षक", "विषय शिक्षक", "मुख्याध्यापक", "विशेष शिक्षक", "केंद्रप्रमुख"];
+        const OTHER_ROLES = ["पर्यवेक्षक", "ग्रंथपाल", "प्रयोग शाळा सहाय्यक", "वरिष्ठ सहाय्यक", "कनिष्ठ सहाय्यक", "परिचर", "घड्याळी तासिका शिक्षक", "व्यायाम शिक्षक", "कला शिक्षक", "इतर"];
+        
+        // All Schools Array
+        const ALL_SCHOOLS = [
+            "Z.P. PRIMARY SCHOOL PIMPALGAON",
+            "Z.P. HIGH SCHOOL PIMPALGAON",
+            "Z.P. SHIVAJI PRIMARY SCHOOL PIMPALGAON",
+            "SNEHA KANYA VIDYALAYA PIMPALGAON",
+            "SKKYWARD'S INTERNATIONAL SCHOOL PIMPALGAON",
+            "Z.P. UPPER PRIMARY SCHOOL RENGEPAR(KOHALI)",
+            "Z.P. PRIMARY SCHOOL SAMEWADA",
+            "Z.P. PRIMARY SCHOOL KHAIRI",
+            "Z.P. UPPER PRIMARY SCHOOL MIREGAON",
+            "SHUKRACHRYA VIDYALAYA MIREGAON"
+        ];
+        
+        let currentFilteredRecords = [];
+        let selectedPads = ["All"]; // Array to hold selected designations
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('padDropdownOptions');
+            const btn = document.getElementById('padDropdownBtn');
+            if (dropdown && btn) {
+                if (!btn.contains(event.target) && !dropdown.contains(event.target)) {
+                    dropdown.style.display = 'none';
+                }
+            }
+        });
+
+        function togglePadDropdown() {
+            const dropdown = document.getElementById('padDropdownOptions');
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function handlePadSelectAll(selectAllCheckbox) {
+            const checkboxes = document.querySelectorAll('.pad-cb.item');
+            checkboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
+            updatePadSelectionText();
+            renderTable();
+        }
+
+        function updatePadSelection() {
+            const selectAllCheckbox = document.querySelector('.pad-cb[value="All"]');
+            const checkboxes = document.querySelectorAll('.pad-cb.item');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            
+            selectAllCheckbox.checked = allChecked;
+            updatePadSelectionText();
+            renderTable();
+        }
+
+        function updatePadSelectionText() {
+            const checkboxes = document.querySelectorAll('.pad-cb.item:checked');
+            const btn = document.getElementById('padDropdownBtn');
+            
+            selectedPads = Array.from(checkboxes).map(cb => cb.value);
+            
+            if (selectedPads.length === 0) {
+                btn.innerText = "कोणतेही पद निवडले नाही";
+                selectedPads = ["NONE"]; // Special flag so filter returns empty
+            } else if (document.querySelector('.pad-cb[value="All"]').checked) {
+                btn.innerText = "सर्व पदे निवडली";
+                selectedPads = ["All"];
+            } else if (selectedPads.length === 1) {
+                if(selectedPads[0] === "OTHER_CUSTOM") btn.innerText = "इतर पदे";
+                else btn.innerText = selectedPads[0];
+            } else {
+                btn.innerText = `${selectedPads.length} पदे निवडली`;
+            }
+        }
+
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active-view'));
+            document.getElementById(viewId).classList.add('active-view');
+            window.scrollTo(0, 0);
+        }
+
+        function updateHeaderName() {
+            let typedName = document.getElementById("nameInput").value;
+            document.getElementById("headerName").innerText = typedName.trim() === "" ? "तुमचे नाव येथे दिसेल" : typedName;
+        }
+
+        function updateUdise() {
+            document.getElementById("udiseInput").value = document.getElementById("schoolSelect").value;
+        }
+        
+        function toggleTetPapers() {
+            var tetStatus = document.getElementById("f_tet").value;
+            document.getElementById("tetPapersDiv").style.display = (tetStatus === "होय") ? "block" : "none";
+        }
+
+        // ================= DYNAMIC FORM PICTURE UPDATE =================
+        function updateFormPicture() {
+            const picElement = document.getElementById("formPicture");
+            const gender = document.getElementById("f_gender").value;
+            const formType = document.getElementById("formTypeIndicator").value;
+            const padValue = document.getElementById("f_pad").value;
+
+            // Default icon
+            let iconClass = "fa-solid fa-user"; 
+            
+            if (formType === "teacher") {
+                if (gender === "स्त्री") {
+                    iconClass = "fa-solid fa-chalkboard-user"; // Female teacher vibe
+                } else {
+                    iconClass = "fa-solid fa-person-chalkboard"; // Male/Default teacher vibe
+                }
+            } else if (formType === "other") {
+                if (padValue === "ग्रंथपाल") {
+                    iconClass = "fa-solid fa-book-open-reader";
+                } else if (padValue === "प्रयोग शाळा सहाय्यक") {
+                    iconClass = "fa-solid fa-flask";
+                } else if (padValue === "व्यायाम शिक्षक") {
+                    iconClass = "fa-solid fa-dumbbell";
+                } else if (padValue === "कला शिक्षक") {
+                    iconClass = "fa-solid fa-palette";
+                } else if (padValue === "परिचर") {
+                    iconClass = "fa-solid fa-bell-concierge";
+                } else if (padValue === "पर्यवेक्षक") {
+                    iconClass = "fa-solid fa-user-shield";
+                } else {
+                    if (gender === "स्त्री") {
+                        iconClass = "fa-solid fa-user-nurse"; // Generic female staff
+                    } else {
+                        iconClass = "fa-solid fa-user-gear"; // Generic male/staff
+                    }
+                }
+            }
+
+            picElement.className = `${iconClass} form-picture`;
+        }
+
+        // ================= DYNAMIC FORM POPULATION =================
+        function populatePadSelect(rolesArray) {
+            let padSelect = document.getElementById("f_pad");
+            padSelect.innerHTML = "";
+            rolesArray.forEach(role => {
+                padSelect.innerHTML += `<option value="${role}">${role}</option>`;
+            });
+        }
+
+        function checkCustomPad() {
+            if(document.getElementById("f_pad").value === "इतर") {
+                document.getElementById("customPadRow").style.display = "grid";
+            } else {
+                document.getElementById("customPadRow").style.display = "none";
+                document.getElementById("f_pad_custom").value = "";
+            }
+            updateFormPicture();
+        }
+
+        function openTeacherForm() {
+            document.getElementById("formTitle").innerHTML = `<i class="fa-solid fa-file-lines"></i> शिक्षक माहिती फॉर्म`;
+            document.getElementById("formTypeIndicator").value = "teacher";
+            
+            populatePadSelect(TEACHER_ROLES);
+            document.getElementById("customPadRow").style.display = "none";
+
+            document.getElementById("editRowIndex").value = "-1";
+            document.querySelectorAll('input:not([type="hidden"])').forEach(i => i.value = '');
+            document.getElementById("headerName").innerText = "तुमचे नाव येथे दिसेल";
+            
+            document.getElementById("f_tet").value = "नाही";
+            document.getElementById("f_mscit").value = "होय";
+            document.getElementById("f_gender").value = "पुरुष";
+            document.getElementById("f_pad").value = "शिक्षण सेवक";
+            document.getElementById("f_management").value = "जिल्हा परिषद संवर्ग";
+            document.getElementById("selfDeclaration").checked = false; // Reset checkbox
+            toggleTetPapers();
+            updateFormPicture(); // Initialize picture
+            
+            switchView('view-form');
+        }
+
+        function openOtherStaffForm() {
+            document.getElementById("formTitle").innerHTML = `<i class="fa-solid fa-users-gear"></i> इतर कर्मचारी / संवर्ग माहिती फॉर्म`;
+            document.getElementById("formTypeIndicator").value = "other";
+            
+            populatePadSelect(OTHER_ROLES);
+            document.getElementById("customPadRow").style.display = "none";
+
+            document.getElementById("editRowIndex").value = "-1";
+            document.querySelectorAll('input:not([type="hidden"])').forEach(i => i.value = '');
+            document.getElementById("headerName").innerText = "तुमचे नाव येथे दिसेल";
+            
+            document.getElementById("f_tet").value = "नाही";
+            document.getElementById("f_mscit").value = "होय";
+            document.getElementById("f_gender").value = "पुरुष";
+            document.getElementById("f_pad").value = OTHER_ROLES[0];
+            document.getElementById("f_management").value = "जिल्हा परिषद संवर्ग";
+            document.getElementById("selfDeclaration").checked = false; // Reset checkbox
+            toggleTetPapers();
+            updateFormPicture(); // Initialize picture
+            
+            switchView('view-form');
+        }
+
+        // ================= INITIATE SAVE WITH EMAIL VERIFICATION =================
+        function initiateSave() {
+            // Check self-declaration
+            if(!document.getElementById("selfDeclaration").checked) {
+                alert("कृपया माहिती सेव्ह करण्यापूर्वी स्वयंघोषणापत्रावर (Self Declaration) टिक करा.");
+                return;
+            }
+            
+            let name = document.getElementById("nameInput").value;
+            let mobile = document.getElementById("f_mobile").value;
+            
+            if(name.trim() === "") { 
+                alert("कृपया पूर्ण नाव टाका."); 
+                return; 
+            }
+            if(mobile.trim().length !== 10) {
+                alert("कृपया १० अंकी मोबाईल क्रमांक योग्यरित्या टाका."); 
+                return;
+            }
+
+            let padValue = document.getElementById("f_pad").value;
+            if (padValue === "इतर") {
+                padValue = document.getElementById("f_pad_custom").value.trim();
+                if(padValue === "") {
+                    alert("कृपया इतर पदाचे नाव लिहा.");
+                    return;
+                }
+            }
+
+            document.getElementById("emailVerifyInput").value = "";
+            document.getElementById("emailModal").style.display = "flex";
+        }
+
+        function closeEmailModal() {
+            document.getElementById("emailModal").style.display = "none";
+        }
+
+        function verifyEmailAndSaveData() {
+            let emailInput = document.getElementById("emailVerifyInput").value.trim();
+            // Basic email validation
+            if(emailInput === "" || !emailInput.includes("@") || !emailInput.includes(".")) {
+                alert("कृपया योग्य ईमेल आयडी टाका.");
+                return;
+            }
+            closeEmailModal();
+            saveDataToGoogle(emailInput); // Proceed to save with email
+        }
+
+        // ================= SAVE DATA =================
+        function saveDataToGoogle(verifiedEmail = "") {
+            let name = document.getElementById("nameInput").value;
+            let padValue = document.getElementById("f_pad").value;
+            if (padValue === "इतर") {
+                padValue = document.getElementById("f_pad_custom").value.trim();
+            }
+
+            let schoolSelect = document.getElementById("schoolSelect");
+            let schoolName = schoolSelect.options[schoolSelect.selectedIndex].text;
+            let mobile = document.getElementById("f_mobile").value;
+
+            let formData = {
+                name: name,
+                gender: document.getElementById("f_gender").value,
+                dob: document.getElementById("f_dob").value,
+                aadhar: document.getElementById("f_aadhar").value,
+                pad: padValue,
+                management: document.getElementById("f_management").value,
+                edu: document.getElementById("f_edu").value,
+                prof: document.getElementById("f_prof").value,
+                tet: document.getElementById("f_tet").value,
+                tet_paper: document.getElementById("f_tet").value === "होय" ? document.getElementById("f_tet_paper").value : "-",
+                mscit: document.getElementById("f_mscit").value,
+                first_join: document.getElementById("f_first_join").value,
+                dist_join: document.getElementById("f_dist_join").value,
+                school_join: document.getElementById("f_school_join").value,
+                school: schoolName !== "-- शाळा निवडा --" ? schoolName : "नोंद नाही",
+                mobile: mobile,
+                email: verifiedEmail, // Saved verified email
+                locked: false, 
+                leaves: [] 
+            };
+
+            let records = JSON.parse(localStorage.getItem('kendraTeachers') || '[]');
+            let editIndex = document.getElementById("editRowIndex").value;
+            
+            if(editIndex !== "-1") {
+                formData.leaves = records[editIndex].leaves || [];
+                formData.locked = records[editIndex].locked || false;
+                records[editIndex] = formData;
+                alert("माहिती यशस्वीरित्या अपडेट झाली!");
+            } else {
+                if(records.find(r => r.mobile === mobile)) {
+                    alert("हा मोबाईल क्रमांक आधीच नोंदणीकृत आहे! कृपया तुमचा दुसरा क्रमांक वापरा किंवा केंद्रप्रमुखांशी संपर्क साधा.");
+                    return;
+                }
+                records.push(formData);
+                alert("तुमची माहिती यशस्वीरित्या प्रमाणित करून सेव्ह केली गेली आहे!");
+            }
+
+            localStorage.setItem('kendraTeachers', JSON.stringify(records));
+            switchView('view-start');
+        }
+
+        // ================= HELPER FUNCTION FOR CL COUNT =================
+        function getCLCount(leavesArray) {
+            if (!leavesArray) return 0;
+            let count = 0;
+            leavesArray.forEach(l => {
+                if (l.type === "किरकोळ रजा (CL)" && l.status === "Approved") {
+                    count++;
+                }
+            });
+            return count;
+        }
+
+        // ================= ADVANCED: GENERATE SPECIAL / CUSTOM LISTS =================
+        
+        function populateSubCategories() {
+            let cat = document.getElementById("specialListCategory").value;
+            let subCatSelect = document.getElementById("specialListSubCategory");
+            let subGroup = document.getElementById("subCategoryGroup");
+            
+            let records = JSON.parse(localStorage.getItem('kendraTeachers') || '[]');
+            
+            if (cat === "") {
+                subGroup.style.display = "none";
+                subCatSelect.innerHTML = "";
+                document.getElementById("specialListData").innerHTML = `<tr><td colspan="6" style="text-align:center; color:#95a5a6;">कृपया वरील मेनूमधून यादीचा प्रकार व उप-प्रकार निवडा.</td></tr>`;
+                return;
+            }
+            
+            subGroup.style.display = "block";
+            let optionsHTML = `<option value="">-- उप-प्रकार निवडा --</option>`;
+            
+            // Extract unique values based on category
+            let uniqueValues = new Set();
+            
+            if (cat === "school") {
+                ALL_SCHOOLS.forEach(s => uniqueValues.add(s));
+            } else if (cat === "management") {
+                uniqueValues.add("जिल्हा परिषद संवर्ग");
+                uniqueValues.add("खाजगी अनुदानित");
+                uniqueValues.add("विनाअनुदानित");
+            } else if (cat === "gender") {
+                uniqueValues.add("पुरुष");
+                uniqueValues.add("स्त्री");
+                uniqueValues.add("इतर");
+            } else if (cat === "edu") {
+                records.forEach(r => { if(r.edu && r.edu.trim() !== "") uniqueValues.add(r.edu.trim().toUpperCase()); });
+            } else if (cat === "prof") {
+                records.forEach(r => { if(r.prof && r.prof.trim() !== "") uniqueValues.add(r.prof.trim().toUpperCase()); });
+            } else if (cat === "tet_mscit") {
+                optionsHTML += `<option value="tet_pass">TET/CTET पास</option>`;
+                optionsHTML += `<option value="mscit_pass">MSCIT पास</option>`;
+                optionsHTML += `<option value="both_pass">TET आणि MSCIT दोन्ही पास</option>`;
+                optionsHTML += `<option value="tet_fail">TET/CTET अनुत्तीर्ण (नाही)</option>`;
+            } else if (cat === "leaves") {
+                optionsHTML += `<option value="pending">प्रलंबित रजा असलेले</option>`;
+                optionsHTML += `<option value="exhausted">१२ CL संपलेले कर्मचारी</option>`;
+            }
+            
+            // Populate dynamically collected options
+            if (cat !== "tet_mscit" && cat !== "leaves") {
+                let sortedValues = Array.from(uniqueValues).sort();
+                sortedValues.forEach(val => {
+                    optionsHTML += `<option value="${val}">${val}</option>`;
+                });
+            }
+            
+            subCatSelect.innerHTML = optionsHTML;
+            document.getElementById("specialListData").innerHTML = `<tr><td colspan="6" style="text-align:center; color:#95a5a6;">कृपया वरील मेनूमधून उप-प्रकार निवडा.</td></tr>`;
+        }
+
+        function generateAdvancedSpecialList() {
+            let cat = document.getElementById("specialListCategory").value;
+            let subCat = document.getElementById("specialListSubCategory").value;
+            let records = JSON.parse(localStorage.getItem('kendraTeachers') || '[]');
+            let filtered = [];
+
+            if (subCat === "") {
+                document.getElementById("specialListData").innerHTML = `<tr><td colspan="6" style="text-align:center; color:#95a5a6;">कृपया वरील मेनूमधून उप-प्रकार निवडा.</td></tr>`;
+                return;
+            }
+
+            if (cat === "school") {
+                filtered = records.filter(r => r.school === subCat);
+            } else if (cat === "management") {
+                filtered = records.filter(r => r.management === subCat);
+            } else if (cat === "gender") {
+                filtered = records.filter(r => r.gender === subCat);
+            } else if (cat === "edu") {
+                filtered = records.filter(r => r.edu && r.edu.trim().toUpperCase() === subCat);
+            } else if (cat === "prof") {
+                filtered = records.filter(r => r.prof && r.prof.trim().toUpperCase() === subCat);
+            } else if (cat === "tet_mscit") {
+                if(subCat === "tet_pass") filtered = records.filter(r => r.tet === "होय");
+                if(subCat === "mscit_pass") filtered = records.filter(r => r.mscit === "होय");
+                if(subCat === "both_pass") filtered = records.filter(r => r.tet === "होय" && r.mscit === "होय");
+                if(subCat === "tet_fail") filtered = records.filter(r => r.tet === "नाही");
+            } else if (cat === "leaves") {
+                if(subCat === "pending") filtered = records.filter(r => (r.leaves || []).some(l => l.status === "Pending"));
+                if(subCat === "exhausted") filtered = records.filter(r => getCLCount(r.leaves) >= 12);
+            }
+
+            let tbody = document.getElementById("specialListData");
+            tbody.innerHTML = "";
+            
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#e74c3c;">या प्रकारची कोणतीही माहिती उपलब्ध नाही.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach((r, idx) => {
+                let detail = "-";
+                
+                // Determine what to show in "Special Details" column based on selected category
+                if(cat === "tet_mscit") {
+                    detail = `TET: ${r.tet} ${r.tet==='होय'? '('+r.tet_paper+')':''} | MSCIT: ${r.mscit}`;
+                } else if(cat === "leaves") {
+                    if (subCat === "pending") {
+                        let pendings = r.leaves.filter(l => l.status === "Pending").length;
+                        detail = `<span style="color:#e67e22; font-weight:bold;">${pendings} रजा प्रलंबित</span>`;
+                    } else if (subCat === "exhausted") {
+                        detail = `<span style="color:#c0392b; font-weight:bold;">${getCLCount(r.leaves)} CL संपल्या</span>`;
+                    }
+                } else if(cat === "edu") {
+                    detail = r.edu;
+                } else if(cat === "prof") {
+                    detail = r.prof;
+                } else if(cat === "gender" || cat === "school" || cat === "management") {
+                    detail = r.management; 
+                }
+
+                tbody.innerHTML += `<tr>
+                    <td>${idx + 1}</td>
+                    <td><b>${r.name}</b></td>
+                    <td>${r.pad}</td>
+                    <td>${r.school}</td>
+                    <td>${r.mobile}</td>
+                    <td>${detail}</td>
+                </tr>`;
+            });
+        }
+
+        // ================= REPORTS FUNCTION & ACCORDION WITH ANIMATIONS =================
+        
+        function toggleReportSection(headerElement) {
+            let contentContainer = headerElement.nextElementSibling;
+            let icon = headerElement.querySelector('.toggle-icon');
+            
+            if (contentContainer.style.display === "none" || contentContainer.style.display === "") {
+                // Open with random animation
+                contentContainer.style.display = "block";
+                
+                // Remove previous animation classes
+                contentContainer.classList.remove('anim-slide-down', 'anim-flip-in', 'anim-zoom-in');
+                
+                // Pick a random animation
+                const anims = ['anim-slide-down', 'anim-flip-in', 'anim-zoom-in'];
+                const randomAnim = anims[Math.floor(Math.random() * anims.length)];
+                contentContainer.classList.add(randomAnim);
+                
+                headerElement.classList.add('active');
+            } else {
+                // Close
+                contentContainer.style.display = "none";
+                headerElement.classList.remove('active');
+            }
+        }
+
+        function showReports() {
+            let records = currentFilteredRecords;
+            
+            if(records.length === 0) {
+                alert("सध्याच्या फिल्टरनुसार कोणतीही माहिती उपलब्ध नाही.");
+                return;
+            }
+            
+            let padCount = {};
+            let mgmtCount = {};
+            let schoolCount = {};
+            let genderCount = {};
+            let tetCount = { "होय (Paper 1)": 0, "होय (Paper 2)": 0, "होय (दोन्ही)": 0, "नाही": 0 };
+            let mscitCount = { "होय": 0, "नाही": 0 };
+            let eduCount = {};
+            let profCount = {};
+            
+            let zpSchoolTypeCount = {
+                "प्राथमिक शाळा (Primary)": 0,
+                "उच्च प्राथमिक शाळा (Upper Primary)": 0,
+                "माध्यमिक शाळा (High School)": 0,
+                "इतर": 0
+            };
+            
+            records.forEach(r => {
+                let p = r.pad || "नोंद नाही";
+                let m = r.management || "नोंद नाही";
+                let s = r.school || "नोंद नाही";
+                let g = r.gender || "नोंद नाही";
+                let edu = r.edu || "नोंद नाही";
+                let prof = r.prof || "नोंद नाही";
+                
+                padCount[p] = (padCount[p] || 0) + 1;
+                mgmtCount[m] = (mgmtCount[m] || 0) + 1;
+                schoolCount[s] = (schoolCount[s] || 0) + 1;
+                genderCount[g] = (genderCount[g] || 0) + 1;
+                
+                if (r.tet === "होय") {
+                    let pType = r.tet_paper || "-";
+                    tetCount[`होय (${pType})`] = (tetCount[`होय (${pType})`] || 0) + 1;
+                } else {
+                    tetCount["नाही"]++;
+                }
+                
+                mscitCount[r.mscit || "नाही"]++;
+                
+                if(edu !== "") eduCount[edu] = (eduCount[edu] || 0) + 1;
+                if(prof !== "") profCount[prof] = (profCount[prof] || 0) + 1;
+                
+                if(m === "जिल्हा परिषद संवर्ग") {
+                    let sNameUpper = s.toUpperCase();
+                    if(sNameUpper.includes("UPPER PRIMARY")) {
+                        zpSchoolTypeCount["उच्च प्राथमिक शाळा (Upper Primary)"]++;
+                    } else if(sNameUpper.includes("PRIMARY")) {
+                        zpSchoolTypeCount["प्राथमिक शाळा (Primary)"]++;
+                    } else if(sNameUpper.includes("HIGH SCHOOL") || sNameUpper.includes("HIGHSCHOOL")) {
+                        zpSchoolTypeCount["माध्यमिक शाळा (High School)"]++;
+                    } else {
+                        zpSchoolTypeCount["इतर"]++;
+                    }
+                }
+            });
+            
+            // MODIFIED makeTable for click-to-expand feature with colorful headers
+            function makeTable(title, dataObj, colorClass, iconClass, ignoreZero = false) {
+                let total = 0;
+                let rowsHTML = "";
+                for(let key in dataObj) {
+                    if (ignoreZero && dataObj[key] === 0) continue; 
+                    rowsHTML += `<tr><td>${key}</td><td style="text-align:center; font-weight:600;">${dataObj[key]}</td></tr>`;
+                    total += dataObj[key];
+                }
+                
+                if (ignoreZero && total === 0) return ""; 
+                
+                let html = `
+                <div style="margin-bottom: 15px;">
+                    <div class="report-section-header ${colorClass}" onclick="toggleReportSection(this)">
+                        <span style="font-size: 16px;"><i class="${iconClass}" style="margin-right:8px;"></i> ${title}</span>
+                        <i class="fa-solid fa-chevron-down toggle-icon"></i>
+                    </div>
+                    
+                    <div class="report-content-container">
+                        <table class="report-table">
+                            <thead><tr><th>तपशील</th><th style="text-align:center;">संख्या</th></tr></thead>
+                            <tbody>
+                                ${rowsHTML}
+                                <tr class="total-row"><td>एकूण</td><td style="text-align:center;">${total}</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+                return html;
+            }
+            
+            let isZpFiltered = document.getElementById('filterManagement').value === "जिल्हा परिषद संवर्ग" || document.getElementById('filterManagement').value === "All";
+            
+            // Main grid for reports
+            let reportHTML = `<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; width: 100%;">`;
+            
+            // Passing title, data, color class, and icon
+            reportHTML += makeTable("पदानुसार गोषवारा", padCount, "header-color-1", "fa-solid fa-user-tie");
+            reportHTML += makeTable("संवर्गानुसार गोषवारा", mgmtCount, "header-color-2", "fa-solid fa-sitemap");
+            reportHTML += makeTable("लिंगानुसार गोषवारा", genderCount, "header-color-3", "fa-solid fa-venus-mars");
+            if (isZpFiltered) reportHTML += makeTable("जिल्हा परिषद शाळा प्रकार", zpSchoolTypeCount, "header-color-4", "fa-solid fa-school", true);
+            reportHTML += makeTable("TET / CTET गोषवारा", tetCount, "header-color-5", "fa-solid fa-file-circle-check", true);
+            reportHTML += makeTable("MSCIT गोषवारा", mscitCount, "header-color-6", "fa-solid fa-computer", true);
+            
+            reportHTML += `</div>`; // Close grid
+            
+            // Full width tables for wider data
+            reportHTML += `<div style="margin-top: 10px;">`;
+            if (Object.keys(eduCount).length > 0) reportHTML += makeTable("शैक्षणिक अर्हता गोषवारा", eduCount, "header-color-7", "fa-solid fa-book", false);
+            if (Object.keys(profCount).length > 0) reportHTML += makeTable("व्यावसायिक अर्हता गोषवारा", profCount, "header-color-8", "fa-solid fa-certificate", false);
+            reportHTML += makeTable("शाळेनुसार गोषवारा", schoolCount, "header-color-1", "fa-solid fa-building-columns", false);
+            reportHTML += `</div>`;
+
+            document.getElementById("reportsContent").innerHTML = reportHTML;
+                
+            switchView('view-reports');
+        }
+
+        // ================= SHOW ZP TEACHERS LIST =================
+        function showZpTeachers() {
+            let records = JSON.parse(localStorage.getItem('kendraTeachers') || '[]');
+            let zpRecords = records.filter(r => r.management === "जिल्हा परिषद संवर्ग");
+            
+            let tbody = document.getElementById("zpTeachersData");
+            tbody.innerHTML = "";
+            
+            if(zpRecords.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#e74c3c;">सध्या कोणताही जिल्हा परिषद कर्मचारी नोंदणीकृत नाही.</td></tr>`;
+            } else {
+                zpRecords.forEach(r => {
+                    tbody.innerHTML += `<tr>
+                        <td><b>${r.name}</b></td>
+                        <td>${r.school}</td>
+                        <td>${r.mobile}</td>
+                        <td>${r.pad}</td>
+                    </tr>`;
+                });
+            }
+            
+            switchView('view-zp-teachers');
+        }
+
+        // ================= SHOW ALL FILTERED STAFF LIST =================
+        function showAllStaffList() {
+            let tbody = document.getElementById("allStaffData");
+            tbody.innerHTML = "";
+            
+            if(currentFilteredRecords.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#e74c3c;">सध्याच्या फिल्टरनुसार कोणतीही माहिती उपलब्ध नाही.</td></tr>`;
+            } else {
+                currentFilteredRecords.forEach((r, index) => {
+                    tbody.innerHTML += `<tr>
+                        <td>${index + 1}</td>
+                        <td><b>${r.name}</b></td>
+                        <td>${r.pad}</td>
+                        <td>${r.school}</td>
+                        <td>${r.mobile}</td>
+                        <td>${r.management}</td>
+                    </tr>`;
+                });
+            }
+            
+            switchView('view-all-staff');
+        }
+
+        // ================= VIEW TEACHER DETAILS =================
+        function viewTeacherDetails(index) {
+            let records = JSON.parse(localStorage.getItem('kendraTeachers') || '[]');
+            let r = records[index];
+            
+            let html = `
+                <h3 style="color:#1e3c72; border-bottom:2px solid #cbd5e1; padding-bottom:10px; margin-bottom:15px;">${r.name}</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div>
+                        <p><b>लिंग:</b> ${r.gender || '-'}</p>
+                        <p><b>जन्मतारीख:</b> ${r.dob || '-'}</p>
+                        <p><b>मोबाईल:</b> ${r.mobile || '-'}</p>
+                        <p><b>ईमेल:</b> ${r.email || 'नोंद नाही'}</p>
+                        <p><b>आधार:</b> ${r.aadhar || '-'}</p>
+                        <p><b>शैक्षणिक अर्हता:</b> ${r.edu || '-'}</p>
+                        <p><b>व्यावसायिक अर्हता:</b> ${r.prof || '-'}</p>
+                        <p><b>TET / CTET:</b> ${r.tet === 'होय' ? 'होय (' + r.tet_paper + ')' : 'नाही'}</p>
+                        <p><b>MSCIT:</b> ${r.mscit || '-'}</p>
+                    </div>
+                    <div>
+                        <p><b>शाळा:</b> ${r.school || '-'}</p>
+                        <p><b>पद:</b> ${r.pad || '-'}</p>
+                        <p><b>संवर्ग:</b> ${r.management || '-'}</p>
+                        <p><b>प्रथम रुजू:</b> ${r.first_join || '-'}</p>
+                        <p><b>या जिल्ह्यात रुजू:</b> ${r.dist_join || '-'}</p>
+                        <p><b>सध्याच्या शाळेत रुजू:</b> ${r.school_join || '-'}</p>
+                        <p><b>मंजूर किरकोळ रजा (CL):</b> <span style="color:#e67e22; font-weight:bold;">${getCLCount(r.leaves)} / 12</span></p>
+                    </div>
+                </div>
+            `;
+            document.getElementById("detailBoxContent").innerHTML = html;
+            switchView('view-teacher-detail');
+        }
+
+        // ================= DELETE TEACHER =================
+        function deleteTeacher(index) {
+            let confirmation = confirm("तुम्हाला नक्की ही माहिती डिलीट करायची आहे का? डिलीट केल्यावर माहिती परत मिळणार नाही.");
+            if (confirmation) {
+                let records = JSON.parse(localStorage.getItem('kendraTeachers') || '[]');
+                records.splice(index, 1);
+                localStorage.setItem('kendraTeachers', JSON.stringify(records));
+                alert("माहिती यशस्वीरित्या डिलीट केली.");
+                renderTable();
+            }
+        }
+
+        // ================= ADMIN LEAVE MANAGEMENT WITH UPLOAD =================
+        function manageLeaves(index) {
+            let records = JSON.parse(localStorage.getItem('kendraTeachers') || '[]');
+            currentTeacherIndex = index;
+            let teacher = records[index];
+            
+            document.getElementById("tDashName").innerText = teacher.name;
+            document.getElementById("tDashSchool").innerText = teacher.school;
+            
+            let lockStatus = teacher.locked ? "<span style='color:red'><i class='fa-solid fa-lock'></i> प्रोफाईल लॉक (बदल करता येणार नाही)</span>" : "<span style='color:green'><i class='fa-solid fa-lock-open'></i> प्रोफाईल अनलॉक</span>";
+            document.getElementById("tDashLockStatus").innerHTML = lockStatus;
+
+            let clCount = getCLCount(teacher.leaves);
+            let clDisplay = clCount > 12 ? `<span style="color:red;">${clCount} / 12 (मर्यादा ओलांडली आहे!)</span>` : `<span style="color:green;">${clCount} / 12</span>`;
+            document.getElementById("tDashCLCount").innerHTML = clDisplay;
+
+            renderTeacherLeaves();
+            switchView('view-admin-leave');
+        }
+
+        function applyLeave() {
+            let records = JSON.parse(localStorage.getItem('kendraTeachers') || '[]');
+            let sDate = document.getElementById("leaveStartDate").value;
+            let eDate = document.getElementById("leaveEndDate").value;
+            
+            if(!sDate || !eDate) {
+                alert("कृपया रजेची सुरुवात आणि शेवटची तारीख निवडा!");
+                return;
+            }
+            
+            let leave = {
+                type: document.getElementById("leaveType").value,
+                dates: sDate + " ते " + eDate,
+                status: "Pending",
+                attachment: "" // New attribute for uploaded file
+            };
+
+            let fileInput = document.getElementById("leaveAttachment");
+            
+            if (fileInput.files.length > 0) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    leave.attachment = e.target.result;
+                    finalizeLeaveSave(leave, records);
+                };
+                // Reading as Data URL to store locally (Base64)
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                finalizeLeaveSave(leave, records);
+            }
+        }
+
+        function finalizeLeaveSave(leave, records) {
+            if(!records[currentTeacherIndex].leaves) records[currentTeacherIndex].leaves = [];
+            records[currentTeacherIndex].leaves.push(leave);
+            
+            localStorage.setItem('kendraTeachers', JSON.stringify(records));
+            
+            document.getElementById("leaveStartDate").value = "";
+            document.getElementById("leaveEndDate").value = "";
+            document.getElementById("leaveAttachment").value = ""; // Reset input
+            
+            alert("रजा यशस्वीरित्या ॲड झाली!");
+            
+            let clCount = getCLCount(records[currentTeacherIndex].leaves);
+            document.getElementById("tDashCLCount").innerHTML = clCount > 12 ? `<span style="color:red;">${clCount} / 12 (मर्यादा ओलांडली आहे!)</span>` : `<span style="color:green;">${clCount} / 12</span>`;
+            
+            renderTeacherLeaves();
+        }
+
+        function renderTeacherLeaves() {
+            let records = JSON.parse(localStorage.getItem('kendraTeachers') || '[]');
+            let leaves = records[currentTeacherIndex].leaves || [];
+            let tbody = document.querySelector("#teacherLeavesTable tbody");
+            tbody.innerHTML = "";
+            
+            leaves.forEach(l => {
+                let badge = l.status === "Approved" ? "badge-approved" : "badge-pending";
+                // Add paperclip icon if attachment exists
+                let attachLink = l.attachment ? `<a href="${l.attachment}" target="_blank" style="margin-left:8px; color:#2980b9;" title="अपलोड केलेला अर्ज पहा"><i class="fa-solid fa-paperclip"></i></a>` : "";
+                
+                tbody.innerHTML += `<tr><td>${l.type} ${attachLink}</td><td>${l.dates}</td><td><span class="${badge}">${l.status}</span></td></tr>`;
+            });
+        }
+
+        // ================= DYNAMIC SCHOOL TYPE FILTER UPDATE =================
+        function updateSchoolTypeFilter() {
+            let mFilter = document.getElementById('filterManagement').value;
+            let typeDropdown = document.getElementById('filterSchoolType');
+            
+            let html = `<option value="All">सर्व प्रकार</option>`;
+            
+            if (mFilter === "जिल्हा परिषद संवर्ग" || mFilter === "All") {
+                html += `<option value="Only_Primary">फक्त प्राथमिक शाळा</option>`;
+                html += `<option value="Only_Upper_Primary">फक्त उच्च प्राथमिक शाळा</option>`;
+                html += `<option value="Primary_Plus_Upper">प्राथमिक + उच्च प्राथमिक एकत्रित</option>`;
+                html += `<option value="Only_High_School">फक्त माध्यमिक शाळा</option>`;
+                html += `<option value="Upper_Plus_High">उच्च प्राथमिक + माध्यमिक एकत्रित</option>`;
+            } 
+            
+            typeDropdown.innerHTML = html;
+            updateSchoolFilter(); 
+        }
+        
+        // ================= DYNAMIC SCHOOL FILTER UPDATE =================
+        function updateSchoolFilter() {
+            let mFilter = document.getElementById('filterManagement').value;
+            let typeFilter = document.getElementById('filterSchoolType').value;
+            let sFilterDropdown = document.getElementById('filterSchool');
+            
+            let html = `<option value="All">-- सर्व शाळा --</option>`;
+            
+            ALL_SCHOOLS.forEach(s => {
+                let sNameUpper = s.toUpperCase();
+                let isZP = s.includes("Z.P.");
+                let isSkkyward = s.includes("SKKYWARD");
+                let isPrivate = !isZP && !isSkkyward;
+                
+                if (mFilter === "जिल्हा परिषद संवर्ग" && !isZP) return;
+                if (mFilter === "खाजगी अनुदानित" && !isPrivate) return;
+                if (mFilter === "विनाअनुदानित" && !isSkkyward) return;
+                
+                if (typeFilter !== "All") {
+                    let isPrimary = sNameUpper.includes("PRIMARY") && !sNameUpper.includes("UPPER");
+                    let isUpperPrimary = sNameUpper.includes("UPPER PRIMARY");
+                    let isHighSchool = sNameUpper.includes("HIGH SCHOOL") || sNameUpper.includes("HIGHSCHOOL");
+                    
+                    if (typeFilter === "Only_Primary" && !isPrimary) return;
+                    if (typeFilter === "Only_Upper_Primary" && !isUpperPrimary) return;
+                    if (typeFilter === "Only_High_School" && !isHighSchool) return;
+                    if (typeFilter === "Primary_Plus_Upper" && !(isPrimary || isUpperPrimary)) return;
+                    if (typeFilter === "Upper_Plus_High" && !(isUpperPrimary || isHighSchool)) return;
+                }
+                
+                html += `<option value="${s}">${s}</option>`;
+            });
+            
+            sFilterDropdown.innerHTML = html;
+        }
+
+        // ================= ADMIN DASHBOARD =================
+        function checkAdminPassword() {
+            if(document.getElementById('adminPassword').value === ADMIN_PASSWORD) {
+                document.getElementById('adminPassword').value = '';
+                updateSchoolTypeFilter(); 
+                switchView('view-dashboard');
+                renderTable();
+            } else { alert("चुकीचा पासवर्ड!"); }
+        }
+        
+        function logoutAdmin() { switchView('view-start'); }
+
+        function renderTable() {
+            let tbody = document.getElementById('dashboardData');
+            let teachersBox = document.getElementById('filteredTeachersBox');
+            let teachersListDiv = document.getElementById('filteredTeachersList');
+            let teachersCountSpan = document.getElementById('filteredTeachersCount');
+            
+            let mFilter = document.getElementById('filterManagement').value;
+            let typeFilter = document.getElementById('filterSchoolType').value;
+            let sFilter = document.getElementById('filterSchool').value;
+            let gFilter = document.getElementById('filterGender').value;
+            
+            let records = JSON.parse(localStorage.getItem('kendraTeachers') || '[]');
+
+            currentFilteredRecords = records.filter(r => {
+                // 1. Management Match
+                let mMatch = (mFilter === "All" || r.management === mFilter);
+                if (!mMatch) return false;
+                
+                // 2. School Type Match
+                let sNameUpper = (r.school || "").toUpperCase();
+                let isPrimary = sNameUpper.includes("PRIMARY") && !sNameUpper.includes("UPPER");
+                let isUpperPrimary = sNameUpper.includes("UPPER PRIMARY");
+                let isHighSchool = sNameUpper.includes("HIGH SCHOOL") || sNameUpper.includes("HIGHSCHOOL");
+                
+                let typeMatch = true;
+                if (typeFilter === "Only_Primary") typeMatch = isPrimary;
+                else if (typeFilter === "Only_Upper_Primary") typeMatch = isUpperPrimary;
+                else if (typeFilter === "Only_High_School") typeMatch = isHighSchool;
+                else if (typeFilter === "Primary_Plus_Upper") typeMatch = (isPrimary || isUpperPrimary);
+                else if (typeFilter === "Upper_Plus_High") typeMatch = (isUpperPrimary || isHighSchool);
+                
+                if (!typeMatch) return false;
+                
+                // 3. Specific School Match
+                let sMatch = (sFilter === "All" || r.school === sFilter);
+                if (!sMatch) return false;
+                
+                // 4. Pad Match (Multi-select support with Custom Handle)
+                let pMatch = false;
+                let isStandardRole = TEACHER_ROLES.includes(r.pad) || OTHER_ROLES.includes(r.pad);
+
+                if (selectedPads.includes("NONE")) {
+                    pMatch = false;
+                } else if (selectedPads.includes("All")) {
+                    pMatch = true;
+                } else {
+                    pMatch = selectedPads.includes(r.pad);
+                    // Handle typed custom roles
+                    if(!isStandardRole && selectedPads.includes("OTHER_CUSTOM")) {
+                        pMatch = true;
+                    }
+                }
+                if (!pMatch) return false;
+                
+                // 5. Gender Match
+                let gMatch = (gFilter === "All" || r.gender === gFilter);
+                if (!gMatch) return false;
+                
+                return true;
+            });
+
+            document.getElementById('dashboardSummary').innerHTML = `
+                <div style="background:#e8f0fe; padding:15px; border-radius:10px; flex:1; text-align:center; border:1px solid #bbdefb;">
+                    <h3 style="color:#1e3c72; font-size:24px; margin:0;">${currentFilteredRecords.length}</h3>
+                    <p style="margin:0; font-size:14px; font-weight:600;">एकूण कर्मचारी (फिल्टरनुसार)</p>
+                </div>
+            `;
+
+            if (currentFilteredRecords.length > 0) {
+                teachersBox.style.display = "block";
+                teachersCountSpan.innerText = currentFilteredRecords.length;
+                let chipsHtml = "";
+                currentFilteredRecords.forEach((r) => {
+                    let realIndex = records.indexOf(r); 
+                    chipsHtml += `<div class="filtered-teacher-chip" onclick="viewTeacherDetails(${realIndex})" title="${r.school} - ${r.pad}">${r.name}</div>`;
+                });
+                teachersListDiv.innerHTML = chipsHtml;
+            } else {
+                teachersBox.style.display = "none";
+                teachersListDiv.innerHTML = "";
+            }
+
+            tbody.innerHTML = '';
+            
+            if(currentFilteredRecords.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#e74c3c;">कोणतीही माहिती उपलब्ध नाही.</td></tr>`;
+                return;
+            }
+            
+            currentFilteredRecords.forEach((r) => {
+                let realIndex = records.indexOf(r); 
+                let lockIcon = r.locked ? '<i class="fa-solid fa-lock" style="color:#e74c3c"></i>' : '<i class="fa-solid fa-lock-open" style="color:#2ecc71"></i>';
+                
+                let leavesHTML = "";
+                let allLeaves = r.leaves || [];
+                let pendingCount = allLeaves.filter(l => l.status === 'Pending').length;
+                let approvedCL = getCLCount(allLeaves);
+                
+                let clAlert = approvedCL > 12 ? `<div style="color:red; font-size:11px; font-weight:bold; margin-bottom:5px;"><i class="fa-solid fa-triangle-exclamation"></i> १२ CL संपल्या आहेत (${approvedCL})</div>` : `<div style="color:green; font-size:11px; margin-bottom:5px;">मंजूर CL: ${approvedCL}/12</div>`;
+
+                if (allLeaves.length > 0) {
+                    leavesHTML += clAlert + `<div class="admin-leave-list">`;
+                    allLeaves.forEach(l => {
+                        let statusColor = l.status === 'Approved' ? 'green' : '#e67e22';
+                        let statusText = l.status === 'Approved' ? 'मंजूर' : 'प्रलंबित';
+                        let attachLink = l.attachment ? `<a href="${l.attachment}" target="_blank" style="color:#2980b9;" title="अर्ज पहा"><i class="fa-solid fa-paperclip"></i></a>` : "";
+                        
+                        leavesHTML += `<div style="font-size:12px; margin-bottom:6px; border-bottom:1px dashed #e2e8f0; padding-bottom:4px;">
+                            <b>${l.type}</b>: ${l.dates} ${attachLink}<br>
+                            <span style="color:${statusColor}; font-weight:600; font-size:11px;">[${statusText}]</span>
+                        </div>`;
+                    });
+                    leavesHTML += `</div>`;
+                } else {
+                    leavesHTML = `<span style="color:#95a5a6; font-size:12px;"><i class="fa-solid fa-minus"></i> रजा नोंद नाही</span>`;
+                }
+
+                if (pendingCount > 0) {
+                    leavesHTML += `<button class="btn-small btn-success" style="width:100%; margin-top:8px; font-weight:bold;" onclick="approveLeave(${realIndex})">${pendingCount} रजा मंजूर करा</button>`;
+                }
+
+                tbody.innerHTML += `<tr>
+                    <td><span class="teacher-name-link" onclick="viewTeacherDetails(${realIndex})">${r.name}</span><br><span style="color:#7f8c8d; font-size:12px;"><i class="fa-solid fa-phone"></i> ${r.mobile}</span></td>
+                    <td>${r.school}<br><span style="background:#e1f5fe; color:#0288d1; padding:2px 8px; border-radius:10px; font-size:11px; margin-top:4px; display:inline-block;">${r.pad} / ${r.management}</span></td>
+                    <td class="action-cell" style="background:#f8fafc; border-left:1px solid #e2e8f0; border-right:1px solid #e2e8f0;">
+                        ${leavesHTML}
+                    </td>
+                    <td class="action-cell" style="text-align:center;">
+                        <button class="btn-small btn-primary" title="माहिती एडिट करा" onclick="editTeacher(${realIndex})"><i class="fa-solid fa-pen"></i></button>
+                        <button class="btn-small btn-info" title="रजा जोडा / व्यवस्थापन" onclick="manageLeaves(${realIndex})"><i class="fa-solid fa-calendar-plus"></i></button>
+                        <button class="btn-small btn-secondary" title="प्रोफाईल लॉक/अनलॉक करा" onclick="toggleLock(${realIndex})">${lockIcon}</button>
+                        <button class="btn-small btn-danger" title="डिलीट करा" onclick="deleteTeacher(${realIndex})"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        function editTeacher(index) {
+            let records = JSON.parse(localStorage.getItem('kendraTeachers') || '[]');
+            let r = records[index];
+            
+            // Determine Form Mode dynamically based on the stored designation (pad)
+            if (TEACHER_ROLES.includes(r.pad)) {
+                document.getElementById("formTitle").innerHTML = `<i class="fa-solid fa-file-lines"></i> शिक्षक माहिती फॉर्म`;
+                document.getElementById("formTypeIndicator").value = "teacher";
+                populatePadSelect(TEACHER_ROLES);
+                document.getElementById("f_pad").value = r.pad;
+                document.getElementById("customPadRow").style.display = "none";
+            } else if (OTHER_ROLES.includes(r.pad)) {
+                document.getElementById("formTitle").innerHTML = `<i class="fa-solid fa-users-gear"></i> इतर कर्मचारी / संवर्ग माहिती फॉर्म`;
+                document.getElementById("formTypeIndicator").value = "other";
+                populatePadSelect(OTHER_ROLES);
+                document.getElementById("f_pad").value = r.pad;
+                document.getElementById("customPadRow").style.display = "none";
+            } else {
+                // If it's a typed custom role
+                document.getElementById("formTitle").innerHTML = `<i class="fa-solid fa-users-gear"></i> इतर कर्मचारी / संवर्ग माहिती फॉर्म`;
+                document.getElementById("formTypeIndicator").value = "other";
+                populatePadSelect(OTHER_ROLES);
+                document.getElementById("f_pad").value = "इतर";
+                document.getElementById("customPadRow").style.display = "grid";
+                document.getElementById("f_pad_custom").value = r.pad;
+            }
+
+            document.getElementById("nameInput").value = r.name || "";
+            document.getElementById("f_mobile").value = r.mobile || "";
+            document.getElementById("f_aadhar").value = r.aadhar || "";
+            document.getElementById("f_gender").value = r.gender || "पुरुष";
+            document.getElementById("f_management").value = r.management || "";
+            document.getElementById("f_edu").value = r.edu || "";
+            document.getElementById("f_prof").value = r.prof || "";
+            document.getElementById("f_mscit").value = r.mscit || "होय";
+            
+            document.getElementById("f_first_join").value = r.first_join || "";
+            document.getElementById("f_dist_join").value = r.dist_join || "";
+            document.getElementById("f_school_join").value = r.school_join || "";
+            
+            document.getElementById("f_tet").value = r.tet || "नाही";
+            toggleTetPapers();
+            if(r.tet === "होय") { document.getElementById("f_tet_paper").value = r.tet_paper || "Paper 1"; }
+
+            document.getElementById("editRowIndex").value = index;
+            
+            updateHeaderName();
+            updateFormPicture(); // Update picture for editing mode
+            document.getElementById("selfDeclaration").checked = false; // Reset checkbox
+            switchView('view-form');
+        }
+
+        function toggleLock(index) {
+            let records = JSON.parse(localStorage.getItem('kendraTeachers') || '[]');
+            records[index].locked = !records[index].locked;
+            localStorage.setItem('kendraTeachers', JSON.stringify(records));
+            renderTable();
+        }
+
+        function approveLeave(index) {
+            let records = JSON.parse(localStorage.getItem('kendraTeachers') || '[]');
+            records[index].leaves.forEach(l => l.status = "Approved");
+            localStorage.setItem('kendraTeachers', JSON.stringify(records));
+            alert("सर्व प्रलंबित रजा मंजूर झाल्या!");
+            renderTable();
+        }
+
+        // ================= EXPORT FEATURES =================
+        function exportExcel() {
+            let cleanData = currentFilteredRecords.map(r => ({
+                "नाव": r.name, 
+                "लिंग": r.gender,
+                "पद": r.pad, 
+                "संवर्ग": r.management, 
+                "शाळा": r.school, 
+                "मोबाईल": r.mobile, 
+                "ईमेल": r.email || "नोंद नाही",
+                "आधार क्रमांक": r.aadhar,
+                "TET / CTET": r.tet === "होय" ? `होय (${r.tet_paper})` : "नाही",
+                "MSCIT": r.mscit,
+                "प्रथम रुजू दिनांक": r.first_join,
+                "या जिल्ह्यात रुजू": r.dist_join,
+                "शाळेत रुजू": r.school_join,
+                "मंजूर CL": getCLCount(r.leaves),
+                "प्रोफाईल लॉक": r.locked ? "Yes" : "No"
+            }));
+            let ws = XLSX.utils.json_to_sheet(cleanData);
+            let wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Staff Data");
+            XLSX.writeFile(wb, "Kendra_Staff_Data.xlsx");
+        }
+
+        function exportWord() {
+            let header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Staff Data</title></head><body>";
+            let footer = "</body></html>";
+            
+            let tableHTML = "<table border='1' style='border-collapse:collapse; width:100%; text-align:left; font-family:sans-serif;'><tr><th>नाव</th><th>लिंग</th><th>पद</th><th>शाळा</th><th>मोबाईल</th><th>ईमेल</th><th>TET/CTET</th><th>प्रथम रुजू</th><th>मंजूर CL</th></tr>";
+            currentFilteredRecords.forEach(r => {
+                let tetDisp = r.tet === "होय" ? `होय (${r.tet_paper})` : "नाही";
+                let emailDisp = r.email || "नोंद नाही";
+                tableHTML += `<tr><td style='padding:5px;'>${r.name}</td><td style='padding:5px;'>${r.gender || '-'}</td><td style='padding:5px;'>${r.pad}</td><td style='padding:5px;'>${r.school}</td><td style='padding:5px;'>${r.mobile}</td><td style='padding:5px;'>${emailDisp}</td><td style='padding:5px;'>${tetDisp}</td><td style='padding:5px;'>${r.first_join || '-'}</td><td style='padding:5px;'>${getCLCount(r.leaves)}</td></tr>`;
+            });
+            tableHTML += "</table>";
+
+            let sourceHTML = header + "<h2 style='text-align:center; font-family:sans-serif;'>समूह साधन केंद्र पिंपळगाव - कर्मचारी माहिती</h2>" + tableHTML + footer;
+            
+            let blob = new Blob(['\ufeff', sourceHTML], { type: 'application/msword' });
+            let url = URL.createObjectURL(blob);
+            let link = document.createElement('a');
+            link.href = url;
+            link.download = 'Staff_Data.doc';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
